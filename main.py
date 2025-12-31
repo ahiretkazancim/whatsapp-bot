@@ -5,20 +5,16 @@ import os
 app = Flask(__name__)
 
 # --- AYARLAR ---
-# Bu bilgiler Render'ın "Environment Variables" kısmındaki isimlerle aynı olmalıdır.
+# Bu değerleri Render panelinde manuel girdiğin için kod buradan çekecek
 VERIFY_TOKEN = os.environ.get("VERIFY_TOKEN", "ahiretkazancim_2025")
 ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID")
 
-# --- DERNEK VE BANKA BİLGİLERİ ---
-BANKA_ADI = "Vakıf Katılım Bankası"
-ALICI_ADI = "AHİRET KAZANCIM EĞİTİM VE YARDIMLAŞMA DERNEĞİ"
-IBAN_NO = "TR38 0021 0000 0006 6508 2000 01"
-
-# --- GÜNCEL LİNKLER ---
-DERNEK_SITE_BAGIS = "https://www.ahiretkazancim.com/bagislar"
+# --- ÖZEL LİNKLER ---
 MUHASEBE_LINK = "https://wa.me/905461434445"
 HALIL_LINK = "https://wa.me/905422937879"
+FATIH_LINK = "https://wa.me/905416043444"
+ONLINE_BAGIS_LINK = "https://www.ahiretkazancim.com/bagislar"
 
 @app.route("/", methods=["GET"])
 def home():
@@ -50,69 +46,54 @@ def receive_message():
                     
                     if message["type"] == "text":
                         gelen_mesaj = message["text"]["body"].lower()
-                        print(f"Mesaj Geldi ({gonderen_no}): {gelen_mesaj}")
 
-                        # --- KARAR MEKANİZMASI ---
-
-                        # 1. HALİL BEY'İ SORANLAR
+                        # 1. HALİL VE FATİH YÖNLENDİRMELERİ
                         if "halil" in gelen_mesaj:
-                            cevap = (
-                                "Halil Bey ile görüşmek isterseniz, kendisine aşağıdaki linkten doğrudan ulaşabilirsiniz:\n"
-                                f"👉 {HALIL_LINK}"
-                            )
+                            cevap = "Selamun Aleyküm efendim, Halil Bey ile görüşmek isterseniz buyurun: \n\n" + HALIL_LINK
+                            whatsapp_cevap_yolla(gonderen_no, cevap)
+                        elif "fatih" in gelen_mesaj:
+                            cevap = "Selamun Aleyküm efendim, Fatih Bey ile görüşmek isterseniz buyurun: \n\n" + FATIH_LINK
                             whatsapp_cevap_yolla(gonderen_no, cevap)
 
-                        # 2. IBAN / HESAP / BAĞIŞ / YARDIM KELİMELERİ
-                        elif any(kelime in gelen_mesaj for kelime in ["iban", "hesap", "banka", "bağış", "yardım"]):
-                            
-                            # Yurt İçi Kontrolü (+90 ile başlayan numaralar)
+                        # 2. FERAH GÖRÜNÜMLÜ IBAN VE BAĞIŞ MESAJI
+                        elif any(k in gelen_mesaj for k in ["iban", "hesap", "banka", "bağış", "yardım", "bağiş"]):
                             if gonderen_no.startswith("90"):
                                 cevap = (
-                                    "Güzel düşüncenizden ve niyetinizden ötürü Rabbimiz sizlerden razı olsun. 🌸\n\n"
-                                    "📌 **Banka Hesap Bilgilerimiz:**\n"
-                                    f"Banka: **{BANKA_ADI}**\n"
-                                    f"Alıcı: **{ALICI_ADI}**\n"
-                                    f"IBAN: **{IBAN_NO}**\n\n"
-                                    "⚠️ Bağışınızı yaptıktan sonra lütfen dekontu ve bağış türünü (zekat, sadaka vb.) şu numaraya iletiniz:\n"
-                                    f"📞 **Muhasebe Hattı:** {MUHASEBE_LINK}"
+                                    "Selamun Aleyküm, güzel niyetinizden ötürü Rabbimiz sizlerden razı olsun. 🌸\n\n"
+                                    "📌 *Banka Hesap Bilgilerimiz:*\n\n"
+                                    "🏦 *Banka:* Vakıf Katılım Bankası\n"
+                                    "👤 *Alıcı:* Ahiret Kazancım Eğitim Ve Yardımlaşma Derneği\n"
+                                    "🔢 *IBAN:* `TR38 0021 0000 0006 6508 2000 01`\n\n"
+                                    "📱 *FAST / Kolay Adres:* 507 971 67 97\n\n"
+                                    "✨ ————————————————— ✨\n\n"
+                                    "🙏 Hayrınızı yaptıktan sonra; *dekontu* ve bağışın *kimin adına* (Kurban 🐑, Su Kuyusu 💧, Yemek Dağıtımı 🍲 vb.) olduğunu iletirseniz hemen notlarımızı alalım efendim.\n\n"
+                                    "🌍 *Yurt Dışı / Döviz İşlemleri İçin:* \n"
+                                    "Aşağıdaki linke tıklayarak bizimle iletişime geçebilirsiniz:\n"
+                                    "👇👇👇\n"
+                                    "https://wa.me/905461434445"
                                 )
                                 whatsapp_cevap_yolla(gonderen_no, cevap)
-                            
-                            # Yurt Dışı Kullanıcıları (90 dışındaki tüm kodlar)
                             else:
+                                # YURT DIŞI NUMARALARI
                                 cevap = (
-                                    "Güzel niyetinizden ötürü Rabbimiz sizlerden razı olsun. 🌸\n\n"
-                                    "Sistemimizde numaranızın yurt dışı olduğu görünüyor. Eğer Türk bankalarında hesabınız yoksa, "
-                                    "web sitemiz üzerinden güvenli şekilde **Online Bağış** yapabilirsiniz:\n"
-                                    f"🌍 **{DERNEK_SITE_BAGIS}**\n\n"
-                                    "Detaylı bilgi almak isterseniz WhatsApp hattımızdan bizimle iletişime geçebilirsiniz:\n"
-                                    f"📞 {MUHASEBE_LINK}"
+                                    "Selamun Aleyküm efendim, yurt dışı bağışlarınız için online ödeme sayfamızı kullanabilirsiniz: \n\n"
+                                    f"🌍 {ONLINE_BAGIS_LINK}\n\n"
+                                    "Dilerseniz şu linkten bizimle doğrudan iletişime geçebilirsiniz:\n"
+                                    "👇👇👇\n"
+                                    "https://wa.me/905461434445"
                                 )
                                 whatsapp_cevap_yolla(gonderen_no, cevap)
-
-                        # 3. DİĞER DURUMLAR (Botun her şeye cevap verip insanları sıkmaması için boş bıraktık)
-                        else:
-                            pass
-
+                                
     return jsonify({"status": "success"}), 200
 
 def whatsapp_cevap_yolla(numara, metin):
     url = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages"
-    headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "messaging_product": "whatsapp",
-        "to": numara,
-        "type": "text",
-        "text": {"body": metin}
-    }
+    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}", "Content-Type": "application/json"}
+    payload = {"messaging_product": "whatsapp", "to": numara, "type": "text", "text": {"body": metin}}
     try:
         requests.post(url, headers=headers, json=payload)
     except Exception as e:
-        print(f"WhatsApp Gönderim Hatası: {e}")
+        print(f"Hata: {e}")
 
 if __name__ == "__main__":
-    # Render portu 10000 olarak bekler
     app.run(host="0.0.0.0", port=10000)
