@@ -5,17 +5,17 @@ import os
 app = Flask(__name__)
 
 # --- AYARLAR ---
-# Bu bilgiler Render'ın "Environment Variables" kısmından çekilecek
+# Bu bilgiler Render'ın "Environment Variables" kısmındaki isimlerle aynı olmalıdır.
 VERIFY_TOKEN = os.environ.get("VERIFY_TOKEN", "ahiretkazancim_2025")
 ACCESS_TOKEN = os.environ.get("ACCESS_TOKEN")
 PHONE_NUMBER_ID = os.environ.get("PHONE_NUMBER_ID")
 
-# --- DERNEK BİLGİLERİ ---
+# --- DERNEK VE BANKA BİLGİLERİ ---
 BANKA_ADI = "Vakıf Katılım Bankası"
 ALICI_ADI = "AHİRET KAZANCIM EĞİTİM VE YARDIMLAŞMA DERNEĞİ"
 IBAN_NO = "TR38 0021 0000 0006 6508 2000 01"
 
-# Linkler
+# --- GÜNCEL LİNKLER ---
 DERNEK_SITE_BAGIS = "https://www.ahiretkazancim.com/bagislar"
 MUHASEBE_LINK = "https://wa.me/905461434445"
 HALIL_LINK = "https://wa.me/905422937879"
@@ -52,9 +52,9 @@ def receive_message():
                         gelen_mesaj = message["text"]["body"].lower()
                         print(f"Mesaj Geldi ({gonderen_no}): {gelen_mesaj}")
 
-                        # --- MANTIK KURGUSU ---
+                        # --- KARAR MEKANİZMASI ---
 
-                        # 1. HALİL'İ SORANLAR
+                        # 1. HALİL BEY'İ SORANLAR
                         if "halil" in gelen_mesaj:
                             cevap = (
                                 "Halil Bey ile görüşmek isterseniz, kendisine aşağıdaki linkten doğrudan ulaşabilirsiniz:\n"
@@ -62,10 +62,10 @@ def receive_message():
                             )
                             whatsapp_cevap_yolla(gonderen_no, cevap)
 
-                        # 2. IBAN / HESAP / BAĞIŞ İSTEYENLER
+                        # 2. IBAN / HESAP / BAĞIŞ / YARDIM KELİMELERİ
                         elif any(kelime in gelen_mesaj for kelime in ["iban", "hesap", "banka", "bağış", "yardım"]):
                             
-                            # Yurt İçi Kontrolü (+90 ile başlayanlar)
+                            # Yurt İçi Kontrolü (+90 ile başlayan numaralar)
                             if gonderen_no.startswith("90"):
                                 cevap = (
                                     "Güzel düşüncenizden ve niyetinizden ötürü Rabbimiz sizlerden razı olsun. 🌸\n\n"
@@ -78,7 +78,7 @@ def receive_message():
                                 )
                                 whatsapp_cevap_yolla(gonderen_no, cevap)
                             
-                            # Yurt Dışı Kullanıcıları
+                            # Yurt Dışı Kullanıcıları (90 dışındaki tüm kodlar)
                             else:
                                 cevap = (
                                     "Güzel niyetinizden ötürü Rabbimiz sizlerden razı olsun. 🌸\n\n"
@@ -90,7 +90,7 @@ def receive_message():
                                 )
                                 whatsapp_cevap_yolla(gonderen_no, cevap)
 
-                        # 3. DİĞER DURUMLAR
+                        # 3. DİĞER DURUMLAR (Botun her şeye cevap verip insanları sıkmaması için boş bıraktık)
                         else:
                             pass
 
@@ -111,7 +111,8 @@ def whatsapp_cevap_yolla(numara, metin):
     try:
         requests.post(url, headers=headers, json=payload)
     except Exception as e:
-        print(f"Hata: {e}")
+        print(f"WhatsApp Gönderim Hatası: {e}")
 
 if __name__ == "__main__":
+    # Render portu 10000 olarak bekler
     app.run(host="0.0.0.0", port=10000)
